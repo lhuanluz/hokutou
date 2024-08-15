@@ -1,3 +1,33 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* Custom Select2 Styling */
+.select2-container .select2-selection--single {
+    background-color: #2d3748; /* Fundo escuro */
+    border: 1px solid #4a5568; /* Borda */
+    color: #e2e8f0; /* Texto claro */
+    height: 38px; /* Altura do campo */
+    border-radius: 0.375rem; /* Borda arredondada */
+}
+
+.select2-container .select2-selection--single .select2-selection__rendered {
+    color: #e2e8f0; /* Texto claro */
+    padding-left: 12px; /* Espaço interno */
+    line-height: 38px; /* Alinhamento vertical */
+}
+
+.select2-container .select2-selection--single .select2-selection__arrow {
+    height: 38px;
+    right: 6px; /* Posição da seta */
+}
+
+.select2-dropdown {
+    background-color: #2d3748; /* Fundo do dropdown */
+    border: 1px solid #4a5568; /* Borda */
+    color: #e2e8f0; /* Texto claro */
+}
+
+.select2-results__option--highlighted {
+    background-color: #4a5568 !important; /* Cor de destaque */
+    color: #e2e8f0; /* Texto claro */
+}

@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\CartController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -27,4 +28,9 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('products', ProductController::class)->except(['show']);
 });
 
+Route::middleware(['auth'])->group(function () {
+    Route::resource('carts', CartController::class)->except(['show']);
+    Route::get('carts/add-product', [CartController::class, 'addProductForm'])->name('carts.addProductForm');
+    Route::post('carts/add-product', [CartController::class, 'addProduct'])->name('carts.addProduct');
+});
 require __DIR__.'/auth.php';
