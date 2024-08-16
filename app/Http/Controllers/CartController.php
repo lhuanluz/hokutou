@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\User;
 use Carbon\Carbon;
+use App\Models\Transaction;
 
 class CartController extends Controller
 {
@@ -167,24 +168,30 @@ class CartController extends Controller
             'status' => 'required|string',
         ]);
 
-        // Atualizar o status e o valor pago
         $cart->status = $request->status;
         $amountPaid = $request->amount_paid;
         $totalValue = $cart->total_value;
+        $balanceDifference = $amountPaid - $totalValue;
+        $user = $cart->user;
 
         if ($request->status == 'done') {
-            $balanceDifference = $amountPaid - $totalValue;
-
-            $user = $cart->user;
-
             if ($balanceDifference != 0) {
-                // Se balanceDifference for negativo, adiciona ao saldo devedor do usuário
-                // Se balanceDifference for positivo, adiciona como crédito
                 $user->balance += $balanceDifference;
                 $user->save();
             }
+
+            // Inserir a movimentação financeira
+            $transactionDate = Carbon::now()->setTimezone('America/Sao_Paulo');
+            Transaction::create([
+                'transaction_date' => $transactionDate,
+                'amount' => $totalValue,
+                'transaction_type' => 'entry',
+                'payment_method' => 'Pix', // Por enquanto, tudo como Pix
+                'installments' => 1, // Supondo pagamento à vista
+                'payment_fee' => 0, // Taxa de Pix
+                'cart_id' => $cart->id,
+            ]);
         } elseif ($request->status == 'cancelled') {
-            // Devolver os produtos ao estoque
             foreach ($cart->products as $product) {
                 $productModel = Product::find($product['id']);
                 if ($productModel) {

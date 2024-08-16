@@ -23,6 +23,9 @@
                         <x-nav-link :href="route('products.index')" :active="request()->routeIs('products.*')">
                             {{ __('Products') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('transactions.index')" :active="request()->routeIs('transactions.*')">
+                            {{ __('Transactions') }}
+                        </x-nav-link>
                     @endif
                     @if(Auth::user()->admin_level >= 1)
                         <x-nav-link :href="route('carts.index')" :active="request()->routeIs('carts.*')">
@@ -92,6 +95,9 @@
                 <x-responsive-nav-link :href="route('products.index')" :active="request()->routeIs('products.*')">
                     {{ __('Products') }}
                 </x-responsive-nav-link>
+                <x-nav-link :href="route('transactions.index')" :active="request()->routeIs('transactions.*')">
+                    {{ __('Transactions') }}
+                </x-nav-link>
             @endif
             @if(Auth::user()->admin_level >= 1)
                 <x-responsive-nav-link :href="route('carts.index')" :active="request()->routeIs('carts.*')">

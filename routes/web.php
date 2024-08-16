@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\TransactionController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -32,5 +33,9 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('carts', CartController::class)->except(['show']);
     Route::get('carts/add-product', [CartController::class, 'addProductForm'])->name('carts.addProductForm');
     Route::post('carts/add-product', [CartController::class, 'addProduct'])->name('carts.addProduct');
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('transactions', [TransactionController::class, 'index'])->name('transactions.index');
 });
 require __DIR__.'/auth.php';
