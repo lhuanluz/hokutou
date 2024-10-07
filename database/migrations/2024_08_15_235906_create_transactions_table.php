@@ -19,7 +19,8 @@ return new class extends Migration
             $table->enum('payment_method', ['Pix', 'Cash', 'Debit', 'Credit']);
             $table->integer('installments')->default(1);
             $table->decimal('payment_fee', 5, 2)->default(0);
-            $table->foreignId('cart_id')->constrained()->onDelete('cascade');
+            $table->foreignId('cart_id')->constrained()->onDelete('cascade')->nullable();
+            $table->foreignId('expense_id')->constrained()->onDelete('cascade')->nullable();
             $table->timestamps();
         });
     }

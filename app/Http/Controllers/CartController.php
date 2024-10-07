@@ -154,42 +154,98 @@ class CartController extends Controller
 
     public function edit(Cart $cart)
     {
-        $users = User::all(); // Carregar todos os usuários
+        $user = $cart->user;
         $products = Product::all(); // Carregar todos os produtos
+        $installmentOptions = $this->calculateInstallments($cart->total_value);
 
-        return view('carts.edit', compact('cart', 'users', 'products'));
+        return view('carts.edit', compact('cart', 'user', 'products', 'installmentOptions'));
     }
 
+    private function calculateInstallments($totalValue)
+    {
+        $installmentOptions = [1,2,3,4,5,6,7,8,9,10,11,12];
+        /*
+        if ($totalValue >= 200 && $totalValue <= 300) {
+            $installmentOptions = [1, 2];
+        } elseif ($totalValue >= 301 && $totalValue <= 450) {
+            $installmentOptions = [1, 2, 3];
+        } elseif ($totalValue >= 451 && $totalValue <= 600) {
+            $installmentOptions = [1, 2, 3, 4];
+        } elseif ($totalValue >= 601 && $totalValue <= 900) {
+            $installmentOptions = [1, 2, 3, 4, 6];
+        } elseif ($totalValue >= 901 && $totalValue <= 1200) {
+            $installmentOptions = [1, 2, 3, 4, 6, 10];
+        } elseif ($totalValue > 1200) {
+            $installmentOptions = [1, 2, 3, 4, 6, 10, 12];
+        }*/
+
+        return $installmentOptions;
+    }
 
     public function update(Request $request, Cart $cart)
     {
         $request->validate([
             'amount_paid' => 'required|numeric|min:0',
-            'status' => 'required|string',
+            'payment_method' => 'required|string',
+            'installments' => 'nullable|integer|min:1',
+            'status' => 'required|string', 'use_credit' => 'nullable|numeric|min:0|max:' . $cart->user->balance,
         ]);
 
         $cart->status = $request->status;
         $amountPaid = $request->amount_paid;
         $totalValue = $cart->total_value;
-        $balanceDifference = $amountPaid - $totalValue;
         $user = $cart->user;
 
+        // Aplicar o crédito, se houver
+        $creditUsed = $request->use_credit ? $request->use_credit : 0;
+        $totalValue -= $creditUsed;
+
+        // Atualizar o saldo do usuário (balance)
+        if ($creditUsed > 0) {
+            $user->balance -= $creditUsed;
+        }
+
         if ($request->status == 'done') {
+            $balanceDifference = $amountPaid - $totalValue;
             if ($balanceDifference != 0) {
                 $user->balance += $balanceDifference;
-                $user->save();
             }
 
+            // Preparar observações
+            $observations = '';
+            if ($creditUsed > 0) {
+                $observations .= "Credit used: $creditUsed. ";
+            }
+
+            if ($balanceDifference < 0) {
+                $observations .= "Remaining debt added to balance: " . abs($balanceDifference) . ".";
+            } elseif ($balanceDifference > 0) {
+                $observations .= "Remaining credit added to balance: $balanceDifference.";
+            } else {
+                $observations .= "No debt or credit was generated.";
+            }
+
+            // Calcular a taxa de acordo com o método de pagamento
+            $paymentFee = 0;
+            if ($request->payment_method === 'Credit') {
+                if ($request->installments > 1) {
+                    $paymentFee = 4.5;
+                } else {
+                    $paymentFee = 3;
+                }
+            }
+            // Atualizar o balance do usuário com a diferença
+
             // Inserir a movimentação financeira
-            $transactionDate = Carbon::now()->setTimezone('America/Sao_Paulo');
             Transaction::create([
-                'transaction_date' => $transactionDate,
-                'amount' => $totalValue,
+                'transaction_date' => Carbon::now()->setTimezone('America/Sao_Paulo'),
+                'amount' => $amountPaid,
                 'transaction_type' => 'entry',
-                'payment_method' => 'Pix', // Por enquanto, tudo como Pix
-                'installments' => 1, // Supondo pagamento à vista
-                'payment_fee' => 0, // Taxa de Pix
+                'payment_method' => $request->payment_method,
+                'installments' => $request->installments ?? 1,
+                'payment_fee' => $paymentFee,
                 'cart_id' => $cart->id,
+                'observations' => $observations, // Adicionar observações
             ]);
         } elseif ($request->status == 'cancelled') {
             foreach ($cart->products as $product) {
@@ -202,9 +258,11 @@ class CartController extends Controller
         }
 
         $cart->save();
+        $user->save(); // Salvar o usuário com o balance atualizado
 
         return redirect()->route('carts.index')->with('success', 'Cart updated successfully.');
     }
+
 
 
 

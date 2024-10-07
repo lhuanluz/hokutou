@@ -17,9 +17,14 @@ class Transaction extends Model
         'installments',
         'payment_fee',
         'cart_id',
+        'observations',
     ];
     public function cart()
     {
         return $this->belongsTo(Cart::class);
+    }
+    public function expense()
+    {
+        return $this->belongsTo(Expense::class);
     }
 }

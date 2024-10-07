@@ -24,7 +24,11 @@ class TransactionController extends Controller
         $transactions = Transaction::with('cart.user')->paginate(10);
 
         foreach ($transactions as $transaction) {
-            $transaction->formatted_products = $this->formatProducts($transaction->cart->products);
+            if ($transaction->cart) {
+                $transaction->formatted_products = $this->formatProducts($transaction->cart->products);
+            } else {
+                $transaction->formatted_products = 'N/A'; // Ou qualquer outro valor que faça sentido para despesas
+            }
         }
 
         return view('transactions.index', compact('transactions'));

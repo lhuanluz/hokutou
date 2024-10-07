@@ -28,4 +28,14 @@ class User extends Authenticatable
         'birth_date' => 'date',
         'balance' => 'decimal:2',
     ];
+
+    public function carts()
+    {
+        return $this->hasMany(Cart::class);
+    }
+
+    public function transactions()
+    {
+        return $this->hasManyThrough(Transaction::class, Cart::class, 'user_id', 'cart_id');
+    }
 }
